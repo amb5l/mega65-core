@@ -1127,8 +1127,11 @@ $(TOOLDIR)/on_screen_keyboard_gen:	$(TOOLDIR)/on_screen_keyboard_gen.c Makefile
 
 #-----------------------------------------------------------------------------
 
+# Generated HDL files
+preliminaries: $(VERILOGSRCDIR)/monitor_mem.v $(M65VHDL)
+
 # Generate Vivado .xpr from .tcl
-vivado/%.xpr: 	vivado/%_gen.tcl | $(VHDLSRCDIR)/*.vhdl $(VHDLSRCDIR)/*.xdc $(VERILOGSRCDIR)/*.v $(VERILOGSRCDIR)/monitor_mem.v
+vivado/%.xpr: 	vivado/%_gen.tcl | preliminaries $(VHDLSRCDIR)/*.vhdl $(VHDLSRCDIR)/*.xdc $(VERILOGSRCDIR)/*.v $(VERILOGSRCDIR)/monitor_mem.v
 	echo MOOSE $@ from $<
 	$(VIVADO) -mode batch -source $<
 # Enable phys_opt_design to improve design timing
@@ -1136,9 +1139,7 @@ vivado/%.xpr: 	vivado/%_gen.tcl | $(VHDLSRCDIR)/*.vhdl $(VHDLSRCDIR)/*.xdc $(VER
 		-e 's,<Step Id="post_route_phys_opt_design"/>,<Step Id="post_route_phys_opt_design" EnableStepBool="1"/>,' >/tmp/xpr
 	mv /tmp/xpr $@
 
-preliminaries: $(VERILOGSRCDIR)/monitor_mem.v $(M65VHDL)
-
-$(BINDIR)/%.bit: 	vivado/%.xpr $(VHDLSRCDIR)/*.vhdl $(VHDLSRCDIR)/*.xdc $(VERILOGSRCDIR)/*.v preliminaries $(SRCDIR)/version.txt
+$(BINDIR)/%.bit: 	vivado/%.xpr $(VHDLSRCDIR)/*.vhdl $(VHDLSRCDIR)/*.xdc $(VERILOGSRCDIR)/*.v $(SRCDIR)/version.txt
 	echo MOOSE $@ from $<
 #	@rm -f $@
 #	@echo "---------------------------------------------------------"
