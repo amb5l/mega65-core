@@ -1156,7 +1156,7 @@ $(BINDIR)/%.bit: 	vivado/%.xpr preliminaries $(VHDLSRCDIR)/*.vhdl $(VHDLSRCDIR)/
 #	@echo "---------------------------------------------------------"
 
 	mkdir -p $(SDCARD_DIR)
-	$(VIVADO) -init -mode batch -source vivado/$(subst bin/,,$*)_impl.tcl vivado/$(subst bin/,,$*).xpr
+	$(VIVADO) -mode batch -source vivado/$(subst bin/,,$*)_impl.tcl vivado/$(subst bin/,,$*).xpr
 	cp vivado/$(subst bin/,,$*).runs/impl_1/container.bit $@
 	# Make a copy named after the commit and datestamp, for easy going back to previous versions
 	cp $@ $(BINDIR)/$*-`cat $(SRCDIR)/version.txt`.bit

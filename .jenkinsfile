@@ -13,29 +13,29 @@ pipeline {
         }
         stage('Cleanup') {
             steps {
-                sh 'make USE_LOCAL_CC65=1 cleanall'
+                sh 'make cleanall'
             }
         }
         stage('Build Freezer') {
             steps {
-                sh 'make USE_LOCAL_CC65=1 freezer_files'
+                sh 'make freezer_files'
             }
         }
         stage('Build MEGA65R3') {
             steps {
-                sh 'make VIVADO=/opt/Xilinx/vivado_wrapper.sh USE_LOCAL_CC65=1 bin/mega65r3.bit'
+                sh 'make bin/mega65r3.bit'
                 sh 'release-build/build-release.sh mega65r3 JENKINSGEN'
             }
         }
         stage('Build MEGA65R2') {
             steps {
-                sh 'make VIVADO=/opt/Xilinx/vivado_wrapper.sh USE_LOCAL_CC65=1 bin/mega65r2.bit'
+                sh 'make bin/mega65r2.bit'
                 sh 'release-build/build-release.sh -noreg mega65r2 JENKINSGEN'
             }
         }
         stage('Build Nexys4DDR-Widget') {
             steps {
-                sh 'make VIVADO=/opt/Xilinx/vivado_wrapper.sh USE_LOCAL_CC65=1 bin/nexys4ddr-widget.bit'
+                sh 'make bin/nexys4ddr-widget.bit'
                 sh 'release-build/build-release.sh nexys4ddr-widget JENKINSGEN'
             }
         }
@@ -49,5 +49,7 @@ pipeline {
     }
     environment {
         BRANCH_SHORT = sh (returnStdout: true, script: 'echo $BRANCH_NAME | sed -r \'s/^(.{5}).*$/\1/\'').trim()
+        USE_LOCAL_CC65 = 1
+        VIVADO = /opt/Xilinx/vivado_wrapper.sh
     }
 }
