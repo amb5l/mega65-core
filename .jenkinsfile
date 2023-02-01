@@ -13,12 +13,12 @@ pipeline {
         }
         stage('Cleanup') {
             steps {
-                sh 'make USE_LOCAL_CC65=0 cleanall'
+                sh 'make USE_LOCAL_CC65=1 cleanall'
             }
         }
         stage('Build Freezer') {
             steps {
-                sh 'make USE_LOCAL_CC65=0 freezer_files'
+                sh 'make USE_LOCAL_CC65=1 freezer_files'
             }
         }
         stage('Build MEGA65R3') {
