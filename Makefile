@@ -389,7 +389,9 @@ MEMVHDL=		$(VHDLSRCDIR)/ghdl_chipram8bit.vhdl \
 			$(VHDLSRCDIR)/ghdl_screen_ram_buffer.vhdl \
 			$(VHDLSRCDIR)/ghdl_videobuffer.vhdl \
 			$(VHDLSRCDIR)/ghdl_ram36x1k.vhdl \
-			$(VHDLSRCDIR)/asym_ram.vhdl
+			$(VHDLSRCDIR)/asym_ram.vhdl \
+			$(VHDLSRCDIR)/shadowram-a100t.vhdl \
+			$(VHDLSRCDIR)/shadowram-a200t.vhdl
 
 NEXYSVHDL=		$(VHDLSRCDIR)/slowram.vhdl \
 			$(VHDLSRCDIR)/sdcard.vhdl \
@@ -1198,7 +1200,7 @@ clean:
 	#rm -f iomap.txt
 	rm -f tests/test_fdc_equal_flag.prg tests/test_fdc_equal_flag.list tests/test_fdc_equal_flag.map
 	rm -rf $(SDCARD_DIR)
-	rm -f $(VHDLSRCDIR)/hyppo.vhdl $(VHDLSRCDIR)/charrom.vhdl $(VHDLSRCDIR)/version.vhdl $(SRCDIR)/version.a65 $(VHDLSRCDIR)/uart_monitor.vhdl
+	rm -f $(VHDLSRCDIR)/hyppo.vhdl $(VHDLSRCDIR)/colourram.vhdl $(VHDLSRCDIR)/charrom.vhdl $(VHDLSRCDIR)/version.vhdl $(SRCDIR)/version.a65 $(VHDLSRCDIR)/uart_monitor.vhdl $(VHDLSRCDIR)/shadowram-a200t.vhdl $(VHDLSRCDIR)/shadowram-a100t.vhdl $(VHDLSRCDIR)/termmem.vhdl $(VHDLSRCDIR)/oskmem.vhdl
 	rm -f $(BINDIR)/monitor.m65 monitor.list monitor.map $(SRCDIR)/monitor/gen_dis $(SRCDIR)/monitor/monitor_dis.a65 $(SRCDIR)/monitor/version.a65
 	rm -f $(VERILOGSRCDIR)/monitor_mem.v
 	rm -f monitor_drive monitor_load read_mem ghdl-frame-gen chargen_debug dis4510 em4510 4510tables
