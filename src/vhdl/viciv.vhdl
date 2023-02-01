@@ -98,6 +98,9 @@ entity viciv is
     viciv_fast : out std_logic;
 
     viciv_frame_indicate : out std_logic := '0';
+
+    interlace_mode : out std_logic := '0';
+    mono_mode : out std_logic := '0';
     
     -- Used to tell the CPU when to steal cycles to simulate badlines
     badline_toggle : out std_logic := '0';
@@ -899,6 +902,7 @@ architecture Behavioral of viciv is
   signal reg_h640 : std_logic := '0';
   signal reg_h1280 : std_logic := '0';
   signal reg_v400 : std_logic := '0';
+  signal reg_mono : std_logic := '0';
   signal reg_interlace : std_logic := '0';
   signal sprite_h640 : std_logic := '1';
   signal sprite_v400s : std_logic_vector(7 downto 0) := x"00";
@@ -1833,7 +1837,7 @@ begin
             & bitplane_mode                    -- BPM
             & reg_v400                         -- V400
             & reg_h1280                         -- H1280
-            & "0"                         -- MONO
+            & reg_mono                         -- Mono mode for composite output
             & reg_interlace;                   -- INT(erlaced?)
 
 
@@ -2114,6 +2118,9 @@ begin
 
     if rising_edge(cpuclock) then
 
+      interlace_mode <= reg_interlace;
+      mono_mode <= reg_mono;
+      
       last_dd00_bits <= dd00_bits;
       if last_dd00_bits /= dd00_bits then
         viciv_legacy_mode_registers_touched <= '1';
@@ -2559,9 +2566,17 @@ begin
           reg_v400 <= fastio_wdata(3);
           -- @IO:C65 $D031.2 VIC-III:H1280 Enable 1280 horizontal pixels (not implemented)
           reg_h1280 <= fastio_wdata(2);
-          -- @IO:C65 $D031.1 VIC-III:MONO Enable VIC-III MONO video output (not implemented)
+          -- @IO:C65 $D031.1 VIC-III:MONO Enable VIC-III MONO composite video output (colour if disabled)
+          reg_mono <= fastio_wdata(1);
           -- @IO:C65 $D031.0 VIC-III:INT Enable VIC-III interlaced mode
-          reg_interlace <= fastio_wdata(0);
+          -- Auto-enable interlace mode when selecting V400 (unless in
+          -- hypervisor, in which case we want to be able to unfreeze this
+          -- register without side-effects)
+          if reg_v400='0' and fastio_wdata(3)='1' and hypervisor_mode='0' then
+            reg_interlace <= '1';
+          else
+            reg_interlace <= fastio_wdata(0);
+          end if;
           viciv_legacy_mode_registers_touched <= '1';
         elsif register_number=50 then
           bitplane_enables <= fastio_wdata;
@@ -4202,6 +4217,7 @@ begin
 
           -- By default, draw all pixel rows of each character
           screenline_draw_mask <= (others => '1');
+          report "DRAWMASK: Reset drawmask to $ff";
           
           report "ZEROing screen_ram_buffer_read_address" severity note;
           screen_ram_buffer_read_address <= to_unsigned(0,9);
@@ -4337,6 +4353,7 @@ begin
             -- Enables chars to be 16x8, with 4 bits each using
             -- full-colour painting pipeline
             glyph_4bit <= colourramdata(3);
+            report "DRAWMASK: Reading glyph_4bit from bit 3 of $" & to_hstring(colourramdata);
             if colourramdata(3)='1' then
               glyph_full_colour <= '1';
             end if;
@@ -4386,6 +4403,10 @@ begin
 
           -- Work out if we are drawing this line of this char
           draw_mask_blank <= not screenline_draw_mask(to_integer(chargen_y_hold));
+          report "DRAWMASK: Y = " & integer'image(to_integer(chargen_y_hold))
+            & ": Setting draw_mask_blank to " & std_logic'image(not screenline_draw_mask(to_integer(chargen_y_hold)))
+            & ", glyph_4bit = " & std_logic'image(glyph_4bit)
+            & ", screenline_draw_mask = $" & to_hstring(screenline_draw_mask);
           
           if glyph_full_colour='1' then
             report "glyph is full colour";
@@ -4442,10 +4463,6 @@ begin
           report "COLOURRAM: Incrementing colourramaddress";
           colourramaddress <= colourramaddress + 1;
 
-          -- Also hold the 2nd colour RAM byte for use as the draw mask,
-          -- if its a GOTOX token with the appropriate bit set
-          screenline_draw_mask_drive <= colourramdata;
-          
           if viciii_extended_attributes='1' or glyph_full_colour='1' then
             -- 8-bit colour RAM in VIC-III/IV mode for bitmap mode, or for
             -- full-colour text mode            
@@ -4488,6 +4505,15 @@ begin
           glyph_visible_drive <= '1';
           glyph_blink_drive <= '0';
 
+          report "DRAWMASK: goto=" & std_logic'image(glyph_goto);
+          if glyph_goto='1' then
+            -- Also hold the 2nd colour RAM byte for use as the draw mask,
+            -- if its a GOTOX token with the appropriate bit set
+            screenline_draw_mask_drive <= colourramdata;
+            report "DRAWMASK: Loading screenline_draw_mask_drive with $" & to_hstring(colourramdata)
+              & ", glyph_4bit = " & std_logic'image(glyph_4bit);
+          end if;      
+                    
           -- Get bold + reverse combination, even if not in VIC-III extended attribute
           -- mode, so that we can check for it in GOTOX tokens.
           glyph_bold_and_reverse <= colourramdata(5) and colourramdata(6);
@@ -4699,15 +4725,20 @@ begin
             paint_alternate_palette <= glyph_reverse and glyph_bold;
             
             if glyph_goto='1' then
+
+              report "DRAWMASK: PAINTING: is GOTOX";
+              
               -- Glyph is tab-stop glyph
               -- Set screen ram buffer write address to 10 bit
               -- offset indicated by glyph number bits
               raster_buffer_write_address(9 downto 0) <= glyph_number(9 downto 0);
 
               if glyph_4bit='1' then
-                screenline_draw_mask <= screenline_draw_mask;
+                screenline_draw_mask <= screenline_draw_mask_drive;
+                report "DRAWMASK: PAINTING: Setting screenline_draw_mask to $" & to_hstring(screenline_draw_mask_drive);
               else
                 screenline_draw_mask <= (others => '1');
+                report "DRAWMASK: PAINTING: Ignoring drawmask. Using $ff (glyph_4bit not set)";
               end if; 
               
               -- Allow setting of the glyph y offset in GOTO tokens
