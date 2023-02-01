@@ -59,8 +59,9 @@ else
 endif
 
 
-VIVADO=	./vivado_wrapper
-
+ifndef VIVADO
+	VIVADO=./vivado_wrapper
+endif
 
 
 ifdef USE_LOCAL_CC65
