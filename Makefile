@@ -59,6 +59,7 @@ else
 endif
 
 
+# Give the option to override vivado_wrapper (needed by jenkins)
 ifndef VIVADO
 	VIVADO=./vivado_wrapper
 endif
