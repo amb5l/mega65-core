@@ -1131,7 +1131,7 @@ $(TOOLDIR)/on_screen_keyboard_gen:	$(TOOLDIR)/on_screen_keyboard_gen.c Makefile
 preliminaries: $(VERILOGSRCDIR)/monitor_mem.v $(M65VHDL)
 
 # Generate Vivado .xpr from .tcl
-vivado/%.xpr: 	vivado/%_gen.tcl | preliminaries $(VHDLSRCDIR)/*.vhdl $(VHDLSRCDIR)/*.xdc $(VERILOGSRCDIR)/*.v $(VERILOGSRCDIR)/monitor_mem.v
+vivado/%.xpr: 	vivado/%_gen.tcl preliminaries $(VHDLSRCDIR)/*.vhdl $(VHDLSRCDIR)/*.xdc $(VERILOGSRCDIR)/*.v $(VERILOGSRCDIR)/monitor_mem.v
 	echo MOOSE $@ from $<
 	$(VIVADO) -mode batch -source $<
 # Enable phys_opt_design to improve design timing
