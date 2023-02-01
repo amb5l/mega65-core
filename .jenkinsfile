@@ -39,11 +39,6 @@ pipeline {
                 sh 'release-build/build-release.sh nexys4ddr-widget JENKINSGEN'
             }
         }
-        stage('Publish') {
-            steps {
-                sh 'gh release list'
-            }
-        }
     }
     post {
         always {
@@ -53,7 +48,6 @@ pipeline {
         }
     }
     environment {
-        GH_TOKEN = credentials('mega65-github-api')
         BRANCH_SHORT = sh (returnStdout: true, script: 'echo $BRANCH_NAME | sed -r \'s/^(.{5}).*$/\1/\'').trim()
     }
 }
