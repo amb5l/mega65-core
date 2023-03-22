@@ -69,6 +69,10 @@ entity neoTRNG is
   );
 end neoTRNG;
 
+trng0_dummy:
+if false generate
+  trng0: entity work.neoTRNG map (
+
 architecture neoTRNG_rtl of neoTRNG is
 
   -- Component: neoTRNG entropy cell --
@@ -485,3 +489,6 @@ begin
 
 
 end neoTRNG_cell_rtl;
+
+);
+end generate;
